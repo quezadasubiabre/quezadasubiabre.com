@@ -1,8 +1,6 @@
 ---
 title: Bienvenida al blog
 date: 2026-07-01 12:00:00 +0000
-categories: [General]
-tags: [meta]
 ---
 
 Bienvenido a mi blog. Aquí voy a escribir sobre ingeniería de software, infraestructura y los proyectos técnicos en los que ando metido.
