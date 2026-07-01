@@ -1,7 +1,7 @@
 ---
 # the default layout is 'page'
 icon: fas fa-info-circle
-order: 4
+order: 2
 ---
 
 Hola, soy **Cristóbal Quezada Subiabre**. Este es mi blog personal, donde escribo sobre ingeniería de software, infraestructura y proyectos técnicos en los que estoy trabajando.
