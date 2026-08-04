@@ -4,8 +4,8 @@ icon: fas fa-info-circle
 order: 2
 ---
 
-Hola, soy **Cristóbal Quezada Subiabre**. Este es mi blog personal, donde escribo sobre ingeniería de software, infraestructura y proyectos técnicos en los que estoy trabajando.
+Hi, I'm **Cristóbal Quezada Subiabre**. This is my personal blog, where I write about software engineering, infrastructure, and the technical projects I'm working on.
 
-## Contacto
+## Contact
 
-Puedes encontrarme en los enlaces de la barra lateral.
+You can find me through the links in the sidebar.
