@@ -1,10 +1,9 @@
 ---
 title: "aws-eks-platform: a platform in Kubernetes"
 date: 2026-09-14 06:00:00 +0000
+mermaid: true
 ---
 
-You can find the infra of this post in this github repo
-https://github.com/quezadasubiabre/aws-eks-platform.git
 
 Nowadays LLMs are very popular, so I wanted to experiment with deploying one on brand-new infrastructure, starting everything from zero. A popular choice for serving LLMs is vLLM, an inference engine that delivers high throughput and efficient memory usage during inference. You can test vLLM on a single machine with a GPU, and I ran my first experiments using the GPU sandbox I introduced in the previous post. But to reach the LLM from anywhere in the world, we need to host it behind an architecture that allows public access — in this case, a Kubernetes cluster.
 
