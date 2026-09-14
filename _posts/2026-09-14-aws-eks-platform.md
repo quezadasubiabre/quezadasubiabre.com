@@ -1,6 +1,6 @@
 ---
 title: "aws-eks-platform: a platform in Kubernetes"
-date: 2026-09-14 12:00:00 +0000
+date: 2026-09-14 06:00:00 +0000
 ---
 
 You can find the infra of this post in this github repo
