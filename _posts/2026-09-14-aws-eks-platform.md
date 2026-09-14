@@ -7,7 +7,7 @@ mermaid: true
 
 Nowadays LLMs are very popular, so I wanted to experiment with deploying one on brand-new infrastructure, starting everything from zero. A popular choice for serving LLMs is vLLM, an inference engine that delivers high throughput and efficient memory usage during inference. You can test vLLM on a single machine with a GPU, and I ran my first experiments using the GPU sandbox I introduced in the previous post. But to reach the LLM from anywhere in the world, we need to host it behind an architecture that allows public access — in this case, a Kubernetes cluster.
 
-The goal of this post is to explain how to build an LLM platform on Kubernetes, so I'll focus on the architecture itself: starting with the VPC setup and going all the way to running the vLLM server in a pod and exposing it through a load balancer using the Traefik ingress controller.
+The goal of this post is to explain how to build a platform on Kubernetes. In this case it's used to host an LLM, but it's designed as a general-purpose platform capable of hosting any application. So I'll focus on the architecture itself: starting with the VPC setup and going all the way to running the vLLM server in a pod and exposing it through a load balancer using the Traefik ingress controller.
 
 I'll build this infrastructure with Terraform, one module for the static infra and another for the EKS cluster. The Terraform states will be persisted in an S3 bucket.
 
