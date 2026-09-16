@@ -7,7 +7,7 @@ mermaid: true
 
 I wanted to build a platform where I could deploy multiple projects and experiment with different applications, so as the most customizable tool for the job, I chose Kubernetes.
 
-The goal of this post is to explain how to build a general-purpose platform on Kubernetes, capable of hosting any application — including ones that need a GPU. So I'll focus on the architecture itself: starting with the VPC setup and going all the way to running a workload in a pod and exposing it through a load balancer using the Traefik ingress controller.
+The goal of this post is to explain how to build a general-purpose platform on Kubernetes, capable of hosting any application — including ones that need a GPU (like LLM). So I'll focus on the architecture itself: starting with the VPC setup and going all the way to running a workload in a pod and exposing it through a load balancer using the Traefik ingress controller.
 
 I'll build this infrastructure with Terraform, one module for the static infra and another for the EKS cluster. The Terraform states will be persisted in an S3 bucket.
 
