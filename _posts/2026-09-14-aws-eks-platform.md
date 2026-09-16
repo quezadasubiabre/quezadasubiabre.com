@@ -5,9 +5,9 @@ mermaid: true
 ---
 
 
-Nowadays LLMs are very popular, so I wanted to experiment with deploying one on brand-new infrastructure, starting everything from zero. A popular choice for serving LLMs is vLLM, an inference engine that delivers high throughput and efficient memory usage during inference. You can test vLLM on a single machine with a GPU, and I ran my first experiments using the GPU sandbox I introduced in the previous post. But to reach the LLM from anywhere in the world, we need to host it behind an architecture that allows public access — in this case, a Kubernetes cluster.
+I wanted to build a platform where I could deploy multiple projects and experiment with different applications, so as the most customizable tool for the job, I chose Kubernetes.
 
-The goal of this post is to explain how to build a platform on Kubernetes. In this case it's used to host an LLM, but it's designed as a general-purpose platform capable of hosting any application. So I'll focus on the architecture itself: starting with the VPC setup and going all the way to running the vLLM server in a pod and exposing it through a load balancer using the Traefik ingress controller.
+The goal of this post is to explain how to build a general-purpose platform on Kubernetes, capable of hosting any application — including ones that need a GPU. So I'll focus on the architecture itself: starting with the VPC setup and going all the way to running a workload in a pod and exposing it through a load balancer using the Traefik ingress controller.
 
 I'll build this infrastructure with Terraform, one module for the static infra and another for the EKS cluster. The Terraform states will be persisted in an S3 bucket.
 
@@ -38,7 +38,7 @@ The Kubernetes cluster has two parts: the infrastructure itself, managed by Terr
 
 #### Kubernetes static infra
 
-The cluster has two nodes: a system node for control, monitoring, and platform applications, and a GPU node dedicated to running vLLM.
+The cluster has two nodes: a system node for control, monitoring, and platform applications, and a GPU node dedicated to running GPU workloads.
 
 For the system node we chose a `t3.medium` EC2 instance, and added extra configuration (via `cloudinit_pre_nodeadm`) to raise the number of private IPs — and therefore pods — it can host. See [the note on pod density below](#a-note-on-pod-density-why-prefix-delegation) for why this is necessary.
 
@@ -52,17 +52,17 @@ In the cluster, 5 add-ons were installed:
 
 - **kube-proxy** — runs on every node and implements Kubernetes Services: it programs each node's networking rules so traffic sent to a Service's stable ClusterIP gets load-balanced across the actual pod IPs behind it. Installed at its most recent version.
 - **vpc-cni** — assigns each pod a real routable IP from the VPC subnet. Configured here with prefix delegation enabled (`ENABLE_PREFIX_DELEGATION=true`, `WARM_PREFIX_TARGET=1`) so each ENI gets a `/28` block of IPs in one allocation instead of one secondary IP at a time, raising max pods per node beyond the t3.medium's default 17-pod limit.
-- **coredns** — the cluster's internal DNS server, resolving Service and pod names (e.g. `vllm-service.default.svc.cluster.local`) to their ClusterIPs. Deliberately installed as a standalone `aws_eks_addon` rather than inside `cluster_addons`, because installing it there makes the module wait on pod scheduling before nodes exist, which stalls the apply.
+- **coredns** — the cluster's internal DNS server, resolving Service and pod names (e.g. `app-service.default.svc.cluster.local`) to their ClusterIPs. Deliberately installed as a standalone `aws_eks_addon` rather than inside `cluster_addons`, because installing it there makes the module wait on pod scheduling before nodes exist, which stalls the apply.
 - **metrics-server** — collects CPU/memory usage from kubelets and exposes it through the Kubernetes Metrics API, powering `kubectl top` and Horizontal Pod Autoscalers. Scaled to 1 replica (not the default 2) since this is a single-node cluster and extra replicas would just burn scarce pod-IP slots.
-- **aws-ebs-csi-driver** — lets pods claim persistent storage backed by EBS volumes (used for the vLLM model-weights PVC). The controller is also scaled to 1 replica for the same reason, with IRSA (`aws_iam_role.ebs_csi_driver`) granting it the `AmazonEBSCSIDriverPolicy` via the cluster's OIDC provider.
+- **aws-ebs-csi-driver** — lets pods claim persistent storage backed by EBS volumes (used for the GPU workload's persistent data). The controller is also scaled to 1 replica for the same reason, with IRSA (`aws_iam_role.ebs_csi_driver`) granting it the `AmazonEBSCSIDriverPolicy` via the cluster's OIDC provider.
 
-The GPU node is a `g5.xlarge` (falling back to `g4dn.xlarge` to widen the Spot capacity pool), running on Spot to keep costs down, using the `AL2023_x86_64_NVIDIA` AMI so the NVIDIA driver and container runtime come preinstalled. Its root volume is bumped to 100GB (gp3), since the vLLM image alone is around 11GB compressed and expands considerably once unpacked; model weights are kept separately, on their own PVC.
+The GPU node is a `g5.xlarge` (falling back to `g4dn.xlarge` to widen the Spot capacity pool), running on Spot to keep costs down, using the `AL2023_x86_64_NVIDIA` AMI so the NVIDIA driver and container runtime come preinstalled. Its root volume is bumped to 100GB (gp3), since GPU workload images tend to be large — several GB compressed, expanding considerably once unpacked; persistent data is kept separately, on its own PVC.
 
 Unlike the system node, the GPU node group is provisioned as a standalone `aws_eks_node_group` with its own IAM role and launch template, rather than through `eks_managed_node_groups`. That's because the EKS module's managed-node-group submodule hardcodes a lifecycle rule that ignores changes to `desired_size` after creation — scaling it through the module again would silently do nothing. Managing it directly keeps `desired_size` mutable.
 
 That mutability is what makes the node controllable through the `gpu_desired_size` Terraform variable, which defaults to `0`. The GPU node doesn't exist — and isn't being billed — until it's scaled up (`terraform apply -var gpu_desired_size=1`) for active testing, then back down to `0` afterward. A simple on/off switch for the most expensive resource in the cluster: a Spot `g5.xlarge` runs roughly $0.30–0.45/hr in `eu-west-1`.
 
-The node also carries a taint, so only pods that explicitly tolerate it — vLLM's own deployment — get scheduled onto it, keeping regular workloads like Argo CD or monitoring off:
+The node also carries a taint, so only pods that explicitly tolerate it — the GPU workload's own deployment — get scheduled onto it, keeping regular workloads like Argo CD or monitoring off:
 
 ```hcl
 taint {
@@ -142,7 +142,7 @@ terraform -chdir=infraestructure/static init
 terraform -chdir=infraestructure/static apply
 ```
 
-### 2. Create EKS cluster
+### 3. Create EKS cluster
 
 ```
 terraform -chdir=infraestructure/eks init
