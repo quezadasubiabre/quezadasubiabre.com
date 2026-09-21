@@ -3,7 +3,9 @@ title: "Installing the Platform Apps with Argo CD"
 date: 2026-09-21 05:00:00 +0000
 ---
 
-In this platform we need several components to make it useful. To install them I'll use Argo CD. The apps I'll install to start with this platform are:
+Continuing with the construction of the platform started in [the previous post](https://quezadasubiabre.com/posts/aws-eks-platform/), we'll now add Argo CD to the cluster and the other components needed to make the platform usable.
+
+The apps I'll install to start with this platform are:
 
 **monitoring**: to get metrics from the cluster and use them, a basic stack is:
 - Prometheus
