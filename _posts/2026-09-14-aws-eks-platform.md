@@ -13,7 +13,7 @@ I'll build this infrastructure with Terraform, one module for the static infra a
 
 Inside the Kubernetes cluster I'll deploy Prometheus for monitoring and Grafana for data visualization. Argo CD will also be installed in the cluster to control the status and sync of all the Kubernetes apps.
 
-Code is up at [github.com/quezadasubiabre/aws-eks-platform](https://github.com/quezadasubiabre/aws-eks-platform).
+Code is up at [github.com/quezadasubiabre/aws-eks-platform](https://github.com/quezadasubiabre/aws-eks-platform/tree/v2.0.0).
 
 ## Overview
 
