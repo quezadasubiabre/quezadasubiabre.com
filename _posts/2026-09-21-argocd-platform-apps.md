@@ -1,5 +1,5 @@
 ---
-title: "Installing the Platform Apps with Argo CD"
+title: "Bootstrapping the Platform with Argo CD"
 date: 2026-09-21 05:00:00 +0000
 ---
 
